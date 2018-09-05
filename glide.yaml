@@ -1,0 +1,20 @@
+package: github.com/f4hrenh9it/parley
+import:
+- package: github.com/go-telegram-bot-api/telegram-bot-api
+  version: ^4.6.2
+- package: github.com/golang-migrate/migrate
+  version: ^3.4.0
+  subpackages:
+  - database/postgres
+  - source/file
+- package: github.com/lib/pq
+- package: go.uber.org/ratelimit
+- package: go.uber.org/zap
+  version: ^1.9.0
+- package: gopkg.in/yaml.v2
+  version: ^2.2.1
+- package: honnef.co/go/tools
+  version: ^2017.2.2
+  subpackages:
+  - '...'
+  - cmd/megacheck

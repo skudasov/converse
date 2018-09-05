@@ -1,0 +1,25 @@
+version: '2.1'
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: "tgsup"
+      POSTGRES_PASSWORD: "tgsup"
+      POSTGRES_DB: "tgsup"
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+  bot:
+    depends_on:
+      - postgres
+    network_mode: "host"
+    build:
+      context: .
+      dockerfile: ./docker/bot/Dockerfile
+    image: "f4hrenh9it/parley_bot:prod"
+    restart: always
+    volumes:
+      - ./bot.yaml:/bot.yaml
+      - ./migrations:/migrations
+    container_name: parley

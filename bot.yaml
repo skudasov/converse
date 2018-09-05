@@ -1,0 +1,17 @@
+bot_token: "651207655:AAHyHe5pkMZnkT5G8d2HGtYmF6ARzEF-JFY"
+delivery_ratelimit: 30
+support_chatid: -297716605
+# default sla in hours
+default_sla: 12
+# last question from user was in N minutes
+stale_question_after: 1
+# check every N seconds
+stale_question_check_interval: 30
+db:
+  host: "127.0.0.1"
+  dbname: "tgsup"
+  user: "tgsup"
+  password: "tgsup"
+  sslmode: "disable"
+  # creates schema and load agents for tests
+  migrate_test_data: false
