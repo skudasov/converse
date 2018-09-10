@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/f4hrenh9it/parley/bot"
-	"github.com/f4hrenh9it/parley/config"
-	"github.com/f4hrenh9it/parley/log"
-	"github.com/f4hrenh9it/parley/db"
+	"github.com/f4hrenh9it/converse/bot"
+	"github.com/f4hrenh9it/converse/config"
+	"github.com/f4hrenh9it/converse/log"
+	"github.com/f4hrenh9it/converse/db"
 	_ "github.com/lib/pq"
 )
 
@@ -19,10 +19,13 @@ func main() {
 	}
 
 	db.ConnectDb(config.B.Db)
-	if config.B.Db.MigrateTestData {
-		if err := db.MigrateUp(); err != nil {
+	if config.B.Db.Migrate {
+		if err := db.MigrateUp(config.B.Db); err != nil {
 			log.L.Fatalf("migration up failed: %s", err)
 		}
+	}
+	if err := db.RegisterAgents(config.B.Agents); err != nil {
+		log.L.Errorf(db.AgentRegisterErr, err)
 	}
 
 	bot.NewStore(config.B.SupportChatId)

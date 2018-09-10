@@ -2,12 +2,12 @@ package bot
 
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/f4hrenh9it/parley/log"
-	"github.com/f4hrenh9it/parley/db"
+	"github.com/f4hrenh9it/converse/log"
+	"github.com/f4hrenh9it/converse/db"
 	"bytes"
 	"fmt"
 	"time"
-	"github.com/f4hrenh9it/parley/config"
+	"github.com/f4hrenh9it/converse/config"
 	"strings"
 )
 

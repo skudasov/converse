@@ -3,12 +3,13 @@ package bot
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"fmt"
-	"github.com/f4hrenh9it/parley/db"
+	"github.com/f4hrenh9it/converse/db"
 	"bytes"
+	"github.com/f4hrenh9it/converse/config"
 )
 
 func startMsg(chatid int64) tgbotapi.MessageConfig {
-	text := "Hello! This is *SONM* support bot.\n" +
+	text := fmt.Sprintf("Hello! This is *%s* support bot.\n", config.B.BotCompanyName) +
 		"*Start* or *select* conversation using /active.\n" +
 		"*Find* your solved conversations using /history.\n" +
 		"*Finish* conversation using /current.\n"
@@ -18,11 +19,11 @@ func startMsg(chatid int64) tgbotapi.MessageConfig {
 }
 
 func startMsgAgent(chatid int64) tgbotapi.MessageConfig {
-	text := "Hello! This is *SONM* support bot.\n" +
+	text := fmt.Sprintf("Hello! This is *%s* support bot.\n", config.B.BotCompanyName) +
 		"*Start* or *select* conversation using /active.\n" +
 		"*Find* your solved conversations using /history.\n" +
 		"*Finish* conversation using /current.\n\n" +
-		"Join support group: `https://t.me/joinchat/BvQoZBLhkTqbbxurOO621g`"
+		fmt.Sprintf("Join support group: %s", config.B.SupportLink)
 	msg := tgbotapi.NewMessage(chatid, text)
 	msg.ParseMode = "markdown"
 	return msg

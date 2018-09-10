@@ -2,7 +2,7 @@ package bot
 
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/f4hrenh9it/parley/log"
+	"github.com/f4hrenh9it/converse/log"
 	"go.uber.org/ratelimit"
 )
 

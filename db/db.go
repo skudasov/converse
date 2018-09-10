@@ -2,8 +2,8 @@ package db
 
 import (
 	"database/sql"
-	"github.com/f4hrenh9it/parley/log"
-	"github.com/f4hrenh9it/parley/config"
+	"github.com/f4hrenh9it/converse/log"
+	"github.com/f4hrenh9it/converse/config"
 	"fmt"
 	"github.com/golang-migrate/migrate"
 	_ "github.com/lib/pq"
@@ -73,10 +73,11 @@ func ConnectDb(cfg *config.Db) {
 	}
 }
 
-func MigrateUp() error {
+func MigrateUp(db *config.Db) error {
 	m, err := migrate.New(
 		"file:///migrations",
-		"postgres://tgsup:tgsup@localhost:5432/tgsup?sslmode=disable")
+		fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=%s",
+			db.User, db.Password, db.Host, db.DbName, db.SslMode))
 	if err != nil {
 		return err
 	}
@@ -228,8 +229,8 @@ func ListActiveConversations(isAgent bool, chatId int) ([]*ListConvInfo, error) 
 		var created time.Time
 		rows.Scan(&id, &description, &lastQuestionTs, &sla, &created)
 		estimated := time.Since(created)
-		pi := &ListConvInfo{id, description, lastQuestionTs, estimated}
-		convList = append(convList, pi)
+		convInfo := &ListConvInfo{id, description, lastQuestionTs, estimated}
+		convList = append(convList, convInfo)
 	}
 	log.L.Debugf("conversations list: %s", convList)
 	return convList, nil
@@ -241,7 +242,7 @@ func GetActiveConversations(isAgent bool, chatId int64) ([]int, error) {
 	var err error
 	if isAgent {
 		rows, err = DB.Query(`select id from conversations
-                                     where (status = $1 or status = $2)`,
+                                     where status in ($1, $2)`,
 			StatusOpened, StatusReopened)
 		if err != nil {
 			return nil, err
@@ -331,7 +332,7 @@ func ConvExists(pid int) bool {
 
 func ConvActive(cid int) bool {
 	var active bool
-	DB.QueryRow(`select exists(select 1 from conversations c 
+	DB.QueryRow(`select exists(select 1 from conversations c
 						where c.status in (0, 1) and c.id = $1)`, cid).Scan(&active)
 	return active
 }
@@ -376,4 +377,14 @@ func getUserId(chatId int64) (int64, error) {
 		return 0, err
 	}
 	return r, nil
+}
+
+func RegisterAgents(agents []*config.Agent) error {
+	for _, agent := range agents {
+		if _, err := DB.Exec(`insert into users (tg_userid, tg_chatid, type, name)
+				   values ($1, $1, 'Agent', $2)`, agent.ChatId, agent.Name); err != nil {
+				   	return err
+		}
+	}
+	return nil
 }

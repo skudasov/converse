@@ -17,9 +17,9 @@ services:
     build:
       context: .
       dockerfile: ./docker/bot/Dockerfile
-    image: "f4hrenh9it/parley_bot:prod"
+    image: "f4hrenh9it/converse_bot:prod"
     restart: always
     volumes:
       - ./bot.yaml:/bot.yaml
       - ./migrations:/migrations
-    container_name: parley
+    container_name: converse

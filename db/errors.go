@@ -8,3 +8,5 @@ var ReopenConvErr = "failed to reopen conversation in db: %s"
 var RestoreHistErr = "failed to restore history: %s"
 
 var DbSequenceErr = "db sequence error: %s"
+
+var AgentRegisterErr = "failed to register agent: %s"

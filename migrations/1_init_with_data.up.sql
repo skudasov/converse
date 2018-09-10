@@ -1,5 +1,5 @@
-drop table if exists parley_msgs;
-drop table if exists parley;
+drop table if exists conversations_msgs;
+drop table if exists conversations;
 drop table if exists msgs;
 drop table if exists users;
 
@@ -43,6 +43,5 @@ create table conversations_msgs
   msg int references msgs (id)
 );
 
-insert into users (tg_userid, tg_chatid, type, name) values (624938764, 624938764, 'Agent', 'pixel2');
+-- insert into users (tg_userid, tg_chatid, type, name) values (624938764, 624938764, 'Agent', 'pixel2');
 -- insert into users (tg_userid, tg_chatid, type, name) values (55281426, 55281426, 'Agent', 'abefimov');
-insert into users (tg_userid, tg_chatid, type, name) values (180156503, 180156503, 'Agent', 'victor');
