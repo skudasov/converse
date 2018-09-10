@@ -60,6 +60,7 @@ After that you may open another conversation using [/active]() or select any res
 
 #### Agent
 On the first start use invite link to join support chat
+
 ![start-agent](./content/start-agent.png)
 
 From agent point of view you can participate in any conversation, one at a time, using [/active](), or review/reopen conversation from [/history]()
@@ -74,6 +75,7 @@ All conversation data stored in database before forwarding to Telegram, and will
 
 #### Support chat
 In support chat one can see notifications of users and agents actions
+
 ![actions](./content/status.png)
 
 Use [/list]() in *support chat* to see relevant conversations, ordered by time spent
