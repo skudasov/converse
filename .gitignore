@@ -14,8 +14,6 @@
 # data
 pg_data/
 
-# deps
-vendor/
 
 # files
 glide.lock
