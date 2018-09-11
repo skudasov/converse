@@ -76,6 +76,8 @@ Use [/list]() in *support chat* to see relevant conversations, ordered by time s
 
 #### TODO
 
+Software is only alpha for now, don't use it for production yet
+
 - [ ] Create rate system, agent can sent messages with inline rate keyboard, conversation will end with this keyboard too
 - [ ] Improve search command with filters
 - [ ] Refactor routers, stub telegram Api and test conversation logic
