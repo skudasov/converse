@@ -1,20 +1,12 @@
 #### Converse
 ###### Telegram support bot
-Install for development:
-1. Install glide package manager
-    ```
-    curl https://glide.sh/get | sh
-    or if OS X
-    brew install glide
-    ```
-2. Install dependencies and docker-compose
-    ```
-    glide install
-    pip install docker-compose
-    ```
-3. Create new bot token using Telegram Bot Father, insert into bot.yaml
-4. Create support chat only for agents, insert invite link to *bot.yaml*
-5. Fill your support Agents data in *bot.yaml*
+###### Prequesites:
+- docker, docker-compose
+
+Install:
+1. Create new bot token using Telegram Bot Father, insert into *bot.yaml*
+2. Create support chat only for agents, insert invite link to *bot.yaml*
+3. Fill your support Agents data in *bot.yaml*
    ```
     bot_token: ""
     bot_company_name: CORP
@@ -38,7 +30,7 @@ Install for development:
         migrate: true
    ```
 
-6. Run
+4. Run (you need docker, docker-compose installed)
    ```
    docker-compose build && docker-compose up
    ```
@@ -81,3 +73,10 @@ In support chat one can see notifications of users and agents actions
 Use [/list]() in *support chat* to see relevant conversations, ordered by time spent
 
 ![list](./content/list.png)
+
+#### TODO
+
+- [ ] Create rate system, agent can sent messages with inline rate keyboard, conversation will end with this keyboard too
+- [ ] Improve search command with filters
+- [ ] Refactor routers, stub telegram Api and test conversation logic
+- [ ] Create support statistics (support chat)

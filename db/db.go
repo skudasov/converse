@@ -304,8 +304,8 @@ func Search(query string) ([]*SearchResult, error) {
                      FROM msgs m
                         JOIN users u ON m.userid = u.id
                         JOIN conversations_msgs cm ON cm.msg = m.id
-                     WHERE m.text LIKE '%' || $1 || '%'
-                     OR m.caption LIKE '%' || $1 || '%';`, query)
+                     WHERE m.text ILIKE '%' || $1 || '%'
+                     OR m.caption ILIKE '%' || $1 || '%';`, query)
 	if err != nil {
 		return nil, err
 	}

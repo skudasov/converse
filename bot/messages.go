@@ -22,7 +22,8 @@ func startMsgAgent(chatid int64) tgbotapi.MessageConfig {
 	text := fmt.Sprintf("Hello! This is *%s* support bot.\n", config.B.BotCompanyName) +
 		"*Start* or *select* conversation using /active.\n" +
 		"*Find* your solved conversations using /history.\n" +
-		"*Finish* conversation using /current.\n\n" +
+		"*Finish* conversation using /current.\n" +
+		"*Search* conversations using /search `text`.\n\n" +
 		fmt.Sprintf("Join support group: %s", config.B.SupportLink)
 	msg := tgbotapi.NewMessage(chatid, text)
 	msg.ParseMode = "markdown"
