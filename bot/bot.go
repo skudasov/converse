@@ -9,40 +9,32 @@ import (
 var B *Bot
 
 type Bot struct {
-	Token                  string
-	Api                    *tgbotapi.BotAPI
-	UpdatesChan            tgbotapi.UpdatesChannel
+	ResponseChan           chan tgbotapi.Chattable
 	DeliveryRateLimit      ratelimit.Limiter
 	DefaultConversationSla int
 }
 
-func StartNewBot(token string, rl int, defaultConversationSla int) {
-	log.L.Debugf("using token: %s", token)
-	b, err := tgbotapi.NewBotAPI(token)
-	if err != nil {
-		log.L.Fatal(err)
+func StartSender(b *tgbotapi.BotAPI, msgChan chan tgbotapi.Chattable) {
+	for {
+		msgCfg := <- msgChan
+		log.L.Debugf("sending msg: %s", msgCfg)
+		if _, err := b.Send(msgCfg); err != nil {
+			log.L.Errorf(TgApiErr, err)
+		}
 	}
-	b.Debug = false
+}
 
-	log.L.Debugf("Authorized on account %s", b.Self.UserName)
-
-	ucfg := tgbotapi.NewUpdate(0)
-	ucfg.Timeout = 60
-
-	updChan, err := b.GetUpdatesChan(ucfg)
-	if err != nil {
-		log.L.Fatalf("failed to get bot updates channel: %s", err)
-	}
-
+func StartReceiver(
+	updChan tgbotapi.UpdatesChannel,
+	respChan chan tgbotapi.Chattable,
+	rl int, defaultConversationSla int) {
 	B = &Bot{
-		Token:             token,
-		Api:               b,
-		UpdatesChan:       updChan,
-		DeliveryRateLimit: ratelimit.New(rl),
+		ResponseChan:           respChan,
+		DeliveryRateLimit:      ratelimit.New(rl),
 		DefaultConversationSla: defaultConversationSla,
 	}
 
-	for update := range B.UpdatesChan {
+	for update := range updChan {
 		if update.CallbackQuery != nil {
 			err := B.HandleKbCallback(update)
 			if err != nil {

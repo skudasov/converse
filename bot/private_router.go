@@ -1,14 +1,14 @@
 package bot
 
 import (
-	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/f4hrenh9it/converse/log"
-	"github.com/f4hrenh9it/converse/db"
 	"bytes"
 	"fmt"
-	"time"
 	"github.com/f4hrenh9it/converse/config"
+	"github.com/f4hrenh9it/converse/db"
+	"github.com/f4hrenh9it/converse/log"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"strings"
+	"time"
 )
 
 const (
@@ -33,32 +33,23 @@ func (m *Bot) SendHistory(chatId int64, hist []db.TypedMsg) error {
 
 			msg := tgbotapi.NewMessage(chatId, buf.String())
 			msg.ParseMode = "markdown"
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 		case "P":
 			// document or photo had only caption for text, so print header anyway
 			msg := tgbotapi.NewMessage(chatId, buf.String())
 			msg.ParseMode = "markdown"
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
+			log.L.Debugf("sending photo")
 			ps := tgbotapi.NewPhotoShare(chatId, h.AttachId)
 			ps.Caption = h.Caption
-			if _, err := m.Api.Send(ps); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- ps
 		case "D":
 			msg := tgbotapi.NewMessage(chatId, buf.String())
 			msg.ParseMode = "markdown"
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			fs := tgbotapi.NewDocumentShare(chatId, h.AttachId)
 			fs.Caption = h.Caption
-			if _, err := m.Api.Send(fs); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- fs
 		}
 	}
 	return nil
@@ -82,18 +73,14 @@ func (m *Bot) SendConversationList(chatId int64, convList []*db.ListConvInfo) er
 		msg = tgbotapi.NewMessage(chatId, buf.String())
 	}
 	msg.ParseMode = "markdown"
-	if _, err := m.Api.Send(msg); err != nil {
-		return fmt.Errorf(TgApiErr, err)
-	}
+	m.ResponseChan <- msg
 	return nil
 }
 
 func (m *Bot) SendSearchResults(chatid int64, searchResults []*db.SearchResult) error {
 	for _, sr := range searchResults {
 		msg := searchResult(chatid, sr)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 	}
 	return nil
 }
@@ -110,6 +97,8 @@ func (m *Bot) HandleCmd(update tgbotapi.Update) error {
 
 	isAgent := db.IsAgent(chatId)
 
+	log.L.Debugf("entities: %s", update.Message.Entities)
+
 	switch cmd {
 	case StartCommand:
 		var msg tgbotapi.MessageConfig
@@ -118,9 +107,7 @@ func (m *Bot) HandleCmd(update tgbotapi.Update) error {
 		} else {
 			msg = startMsg(chatId)
 		}
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 
 		if !db.UserExists(update) {
 			if err := m.NewConversation(chatId, isAgent); err != nil {
@@ -135,16 +122,12 @@ func (m *Bot) HandleCmd(update tgbotapi.Update) error {
 		var msg tgbotapi.MessageConfig
 		if !isAgent {
 			msg = searchNotAllowed(chatId)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			return nil
 		}
 		if len(argString) == 0 {
 			msg = nothingToSearch(chatId)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			return nil
 		}
 		res, err := db.Search(argString)
@@ -157,9 +140,7 @@ func (m *Bot) HandleCmd(update tgbotapi.Update) error {
 		}
 	case MyChatIdCommand:
 		msg := myChatId(chatId)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 	case ConversationActiveSelectorMenu:
 		convs, err := db.GetActiveConversations(isAgent, chatId)
 		if err != nil {
@@ -167,9 +148,7 @@ func (m *Bot) HandleCmd(update tgbotapi.Update) error {
 		}
 		msg := ConversationSelectorKb(chatId, convs, true)
 
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 	case ConversationHistorySelectorMenu:
 		convs, err := db.GetHistoryConversations(isAgent, chatId)
 		if err != nil {
@@ -177,26 +156,18 @@ func (m *Bot) HandleCmd(update tgbotapi.Update) error {
 		}
 		msg := ConversationSelectorKb(chatId, convs, false)
 
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 	case ConversationCurrentMenu:
 		if _, ok := CS.CurrentConversation[chatId]; !ok {
 			msg := notInAnyConversation(chatId)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			return nil
 		}
 		msg := ConversationCurrentKb(chatId, CS.CurrentConversation[chatId])
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 	default:
 		msg := unrecognizedCommand(chatId)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 	}
 	CS.Debug()
 	return nil
@@ -225,9 +196,7 @@ func extractAttach(update tgbotapi.Update) (caption string, attachId string, att
 func (m *Bot) AlertVisited(chatId int64, convId int) error {
 	name := db.NameByChatId(chatId)
 	msg := visitAlert(CS.SupportChat, convId, name)
-	if _, err := m.Api.Send(msg); err != nil {
-		return fmt.Errorf(TgApiErr, err)
-	}
+	m.ResponseChan <- msg
 	return nil
 }
 
@@ -242,9 +211,7 @@ func (m *Bot) AlertNewMsg(toChat int64, fromId int64, convId int, isAgent bool) 
 		msg = newQuestionAlert(toChat, convId, desc, name)
 	}
 	msg.ParseMode = "markdown"
-	if _, err := m.Api.Send(msg); err != nil {
-		return fmt.Errorf(TgApiErr, err)
-	}
+	m.ResponseChan <- msg
 	return nil
 }
 
@@ -257,9 +224,7 @@ func (m *Bot) HandleMsg(update tgbotapi.Update) error {
 	curConvId, ok := CS.CurrentConversation[fromId]
 	if !ok {
 		msg := notInAnyConversation(fromId)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 		return nil
 	}
 
@@ -271,9 +236,7 @@ func (m *Bot) HandleMsg(update tgbotapi.Update) error {
 
 	if !db.ConvActive(curConvId) {
 		msg := conversationClosed(fromId, curConvId)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 		return nil
 	}
 	if curConv.Description == "" {

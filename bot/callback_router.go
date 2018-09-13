@@ -20,9 +20,7 @@ func (m *Bot) NewConversation(chatId int64, isAgent bool) error {
 	log.L.Infof("creating new conversation")
 	if isAgent {
 		msg := creationRestricted(chatId)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 		return nil
 	}
 	pid, err := CS.CreateConv(chatId)
@@ -38,9 +36,7 @@ func (m *Bot) NewConversation(chatId int64, isAgent bool) error {
 	}
 
 	msg := conversationCreated(chatId, pid)
-	if _, err := m.Api.Send(msg); err != nil {
-		return fmt.Errorf(TgApiErr, err)
-	}
+	m.ResponseChan <- msg
 	return nil
 }
 
@@ -63,25 +59,19 @@ func (m *Bot) HandleKbCallback(update tgbotapi.Update) error {
 		CS.Close(chatId, db.StatusResolved)
 		if isAgent {
 			msg := conversationClosed(chatId, cid)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 		}
 	case CloseCurrentConversationCbData:
 		CS.Close(chatId, db.StatusClosed)
 		if isAgent {
 			msg := conversationClosed(chatId, cid)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 		}
 	case ReopenCurrentConversationCbData:
 		CS.Reopen(chatId, db.StatusReopened)
 		if isAgent {
 			msg := conversationReopened(chatId, cid)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 		}
 		//go to reopened conversation
 		update.CallbackQuery.Data = strconv.Itoa(cid)
@@ -94,9 +84,7 @@ func (m *Bot) HandleKbCallback(update tgbotapi.Update) error {
 		}
 		if !db.ConvExists(cid) {
 			msg := noSuchConversation(chatId)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			return nil
 		}
 
@@ -106,24 +94,18 @@ func (m *Bot) HandleKbCallback(update tgbotapi.Update) error {
 		if isIntruder {
 			msg := noSuchConversation(chatId)
 			msg.ParseMode = "markdown"
-			if _, err := B.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			return nil
 		}
 		occupantName := db.NameByChatId(occupantChatId)
 		if occupantChatId != 0 {
 			msg := conversationOccupied(chatId, occupantName)
-			if _, err := m.Api.Send(msg); err != nil {
-				return fmt.Errorf(TgApiErr, err)
-			}
+			m.ResponseChan <- msg
 			return nil
 		}
 
 		msg := conversationJoined(chatId, cid)
-		if _, err := m.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		m.ResponseChan <- msg
 		if restore {
 			hist, err = db.RestoreHistory(cid)
 			if err != nil {

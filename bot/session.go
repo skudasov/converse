@@ -38,9 +38,7 @@ func (m *ConversationsStore) Debug() {
 func (m *ConversationsStore) AlertConversationCreated(cid int) error {
 	msg := conversationCreatedAlert(cid, CS.SupportChat)
 	msg.ParseMode = "markdown"
-	if _, err := B.Api.Send(msg); err != nil {
-		return fmt.Errorf(TgApiErr, err)
-	}
+	B.ResponseChan <- msg
 	return nil
 }
 
@@ -51,9 +49,7 @@ func (m *ConversationsStore) AlertConvStatusChanged(cid int, status db.ConvStatu
 	msgs = append(msgs, conversationEndedAlert(cid, CS.SupportChat, status, who))
 
 	for _, m := range msgs {
-		if _, err := B.Api.Send(m); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		B.ResponseChan <- m
 	}
 	return nil
 }
@@ -125,9 +121,7 @@ func (m *ConversationsStore) Close(chatId int64, status db.ConvStatus) error {
 		m.ExitConv(chatId)
 	} else {
 		msg := notInAnyConversation(chatId)
-		if _, err := B.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		B.ResponseChan <- msg
 	}
 	return nil
 }
@@ -144,9 +138,7 @@ func (m *ConversationsStore) Reopen(chatId int64, status db.ConvStatus) error {
 		delete(CS.CurrentConversation, chatId)
 	} else {
 		msg := notInAnyConversation(chatId)
-		if _, err := B.Api.Send(msg); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		B.ResponseChan <- msg
 	}
 	return nil
 }
@@ -168,16 +160,12 @@ type Conversation struct {
 }
 
 func (m *Conversation) Deliver(bot *Bot, u tgbotapi.Update, isAgent bool) error {
+	var fc tgbotapi.Chattable
 	if isAgent {
-		fc := tgbotapi.NewForward(m.UserId, m.AgentId, u.Message.MessageID)
-		if _, err := B.Api.Send(fc); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		fc = tgbotapi.NewForward(m.UserId, m.AgentId, u.Message.MessageID)
 	} else {
-		fc := tgbotapi.NewForward(m.AgentId, m.UserId, u.Message.MessageID)
-		if _, err := B.Api.Send(fc); err != nil {
-			return fmt.Errorf(TgApiErr, err)
-		}
+		fc = tgbotapi.NewForward(m.AgentId, m.UserId, u.Message.MessageID)
 	}
+	B.ResponseChan <- fc
 	return nil
 }

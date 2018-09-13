@@ -57,7 +57,7 @@ type SearchResult struct {
 	Conversation int
 }
 
-func ConnectDb(cfg *config.Db) {
+func ConnectDb(cfg *config.Db) error {
 	conninfo := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=%s",
 		cfg.Host,
 		cfg.DbName,
@@ -69,21 +69,20 @@ func ConnectDb(cfg *config.Db) {
 	var err error
 	DB, err = sql.Open("postgres", conninfo)
 	if err != nil {
-		log.L.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func MigrateUp(db *config.Db) error {
+func MigrateUp(db *config.Db, path string) error {
 	m, err := migrate.New(
-		"file:///migrations",
+		path,
 		fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=%s",
 			db.User, db.Password, db.Host, db.DbName, db.SslMode))
 	if err != nil {
 		return err
 	}
-	if err := m.Up(); err != nil {
-		return err
-	}
+	m.Migrate(1)
 	return nil
 }
 
